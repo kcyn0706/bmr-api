@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>건강지표 계산기</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    label {
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, select:focus {
+      border-color: #2575fc;
+      outline: none;
+    }
+
+    button {
+      background-color: #2575fc;
+      color: white;
+      padding: 12px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #1d63c1;
+    }
+
+    .result {
+      margin-top: 25px;
+      padding: 20px;
+      background-color: #f4f4f9;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.2rem;
+      display: none;
+    }
+
+    .result h3 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+    }
+
+    .result p {
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .result p span {
+      font-weight: bold;
+      color: #2575fc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1> 건강지표 계산기</h1>
+    <form id="bmr-form">
+
+      <label for="height">키 (cm):</label>
+      <input type="number" id="height" name="height" required>
+      
+      <label for="weight">체중 (kg):</label>
+      <input type="number" id="weight" name="weight" required>
+      
+      <label for="age">나이 (만):</label>
+      <input type="number" id="age" name="age" required>
+      
+      <label for="gender">성별:</label>
+      <select id="gender" name="gender" required>
+        <option value="male">남성</option>
+        <option value="female">여성</option>
+      </select>
+      
+      <label for="activity_level">활동 수준:</label>
+      <select id="activity_level" name="activity_level" required>
+        <option value="none">없음</option>
+        <option value="light">가벼운 활동</option>
+        <option value="moderate">보통 활동</option>
+        <option value="active">활발한 활동</option>
+        <option value="very_active">매우 활발한 활동</option>
+      </select>
+
+      <button type="submit">계산하기</button>
+    </form>
+
+    <div class="result" id="result">
+      <h3>당신의 결과</h3>
+      <p>BMR: <span id="bmr-value"></span> kcal/일</p>
+      <p>TDEE: <span id="tdee-value"></span> kcal/일</p>
+      <p>BMI: <span id="bmi-value"></span></p>
+      <p>체질량 상태: <span id="bmi-status"></span></p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('bmr-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const weight = parseFloat(document.getElementById('weight').value);
+      const height = parseFloat(document.getElementById('height').value);
+      const age = parseInt(document.getElementById('age').value);
+      const gender = document.getElementById('gender').value;
+      const activityLevel = document.getElementById('activity_level').value;
+
+      // 서버에 POST 요청
+      fetch('http://localhost:3000/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          weight: weight,
+          height: height,
+          age: age,
+          gender: gender,
+          activity_level: activityLevel,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.bmr && data.tdee && data.bmi) {
+          document.getElementById('result').style.display = 'block';
+          document.getElementById('bmr-value').textContent = data.bmr;
+          document.getElementById('tdee-value').textContent = data.tdee;
+          document.getElementById('bmi-value').textContent = data.bmi;
+          document.getElementById('bmi-status').textContent = data.bmi_status;
+        } else {
+          alert("계산 오류. 입력 값을 확인해주세요.");
+        }
+      })
+      .catch(error => {
+        alert("오류 발생: " + error);
+      });
+    });
+  </script>
+</body>
+</html>
